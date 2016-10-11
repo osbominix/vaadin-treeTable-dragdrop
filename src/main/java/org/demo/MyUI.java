@@ -1,4 +1,4 @@
-package org.test;
+package org.demo;
 
 import javax.servlet.annotation.WebServlet;
 
@@ -10,15 +10,10 @@ import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
 import com.vaadin.event.dd.acceptcriteria.AcceptAll;
 import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
-import com.vaadin.event.dd.acceptcriteria.Not;
-import com.vaadin.event.dd.acceptcriteria.Or;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.ui.dd.VerticalDropLocation;
 import com.vaadin.ui.*;
-
-import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * This UI is the application entry point. A UI may either represent a browser window 
