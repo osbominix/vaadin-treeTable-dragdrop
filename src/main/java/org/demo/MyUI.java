@@ -8,12 +8,16 @@ import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.event.DataBoundTransferable;
 import com.vaadin.event.dd.DragAndDropEvent;
 import com.vaadin.event.dd.DropHandler;
-import com.vaadin.event.dd.acceptcriteria.AcceptAll;
-import com.vaadin.event.dd.acceptcriteria.AcceptCriterion;
+import com.vaadin.event.dd.acceptcriteria.*;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.ui.dd.VerticalDropLocation;
 import com.vaadin.ui.*;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * This UI is the application entry point. A UI may either represent a browser window 
@@ -30,7 +34,6 @@ public class MyUI extends UI {
         final VerticalLayout layout = new VerticalLayout();
 
         TreeTable ttable = generateTreeTable();
-
 
         layout.addComponents(ttable);
         layout.setMargin(true);
@@ -63,6 +66,10 @@ public class MyUI extends UI {
         ttable.setParent(5, 2);
         ttable.setParent(6, 2);
 
+        /*ttable.setChildrenAllowed(rootId, true);
+        ttable.setChildrenAllowed(1, true);
+        ttable.setChildrenAllowed(2, true);*/
+
         ttable.setCollapsed(rootId, false);
         ttable.setCollapsed(1, false);
         ttable.setCollapsed(2, false);
@@ -74,7 +81,19 @@ public class MyUI extends UI {
 
             public AcceptCriterion getAcceptCriterion() {
 
-                return AcceptAll.get();
+                //return AcceptAll.get();
+                Table.TableDropCriterion criterion = new Table.TableDropCriterion() {
+                    @Override
+                    protected Set<Object> getAllowedItemIds(DragAndDropEvent dragAndDropEvent, Table table, Collection<Object> collection) {
+                        HashSet<Object> allowed = new HashSet<Object>();
+                        allowed.add(rootId);
+                        allowed.add(4);
+                        allowed.add(6);
+                        return allowed;
+                    }
+                };
+                return criterion;
+                //return criterion;
 
             }
 
@@ -99,31 +118,21 @@ public class MyUI extends UI {
                         (HierarchicalContainer) ttable.getContainerDataSource();
 
 
-                if (ttable.hasChildren(sourceItemId)) {
-                    //treeTable.hasChildren(targetItemId)
-                    if (location == VerticalDropLocation.MIDDLE) {
-//                        System.out.println("Drag to Middle");
-                    } else if (location == VerticalDropLocation.TOP) {
-                        if (!ttable.hasChildren(targetItemId)) {
-                            return;
+                if (ttable.hasChildren(sourceItemId) && (!sourceItemId.toString().equals(rootId))) {
+                    if (location == VerticalDropLocation.BOTTOM) {
+
+                        container.setParent(sourceItemId, rootId);
+
+                        if (!container.hasChildren(targetItemId)) {
+                            targetItemId = container.getParent(targetItemId);
+                            container.moveAfterSibling(sourceItemId, targetItemId);
+                        } else {
+                            Object anOtherSibling = 1;
+                            if (sourceItemId.toString().equals("1")) {
+                                anOtherSibling = 2;
+                            }
+                            container.moveAfterSibling(anOtherSibling, sourceItemId);
                         }
-                        if ((rootId - (int)targetItemId) != 0) {
-                            Object parentId = container.getParent(targetItemId);
-                            container.setParent(sourceItemId, parentId);
-                            container.moveAfterSibling(targetItemId, sourceItemId);
-                        }
-
-                    } else if (location == VerticalDropLocation.BOTTOM) {
-                        if (ttable.hasChildren(targetItemId)) {
-                            return;
-                        }
-
-                        Object targetParentId = container.getParent(targetItemId);
-                        Object parentId = container.getParent(targetParentId);
-                        container.setParent(sourceItemId, parentId);
-                        container.moveAfterSibling(sourceItemId, targetParentId);
-
-
                     }
                 }
             }
