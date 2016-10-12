@@ -14,10 +14,7 @@ import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.ui.dd.VerticalDropLocation;
 import com.vaadin.ui.*;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This UI is the application entry point. A UI may either represent a browser window 
@@ -66,6 +63,9 @@ public class MyUI extends UI {
         ttable.setParent(5, 2);
         ttable.setParent(6, 2);
 
+        ttable.setChildrenAllowed(3, false);
+        ttable.setChildrenAllowed(4, false);
+
         /*ttable.setChildrenAllowed(rootId, true);
         ttable.setChildrenAllowed(1, true);
         ttable.setChildrenAllowed(2, true);*/
@@ -76,27 +76,17 @@ public class MyUI extends UI {
 
         ttable.setDragMode(Table.TableDragMode.ROW);
 
+        List<Integer> goodIds = new ArrayList<>();
+        goodIds.add(1);
+        goodIds.add(2);
+        Object[] ids = goodIds.toArray();
+
+        AcceptCriterion criterion = new And(new AbstractSelect.TargetItemIs(ttable, ids),
+                new AbstractSelect.AcceptItem(ttable, ids));
+
+
         ttable.setDropHandler(new DropHandler() {
-
-
-            public AcceptCriterion getAcceptCriterion() {
-
-                //return AcceptAll.get();
-                Table.TableDropCriterion criterion = new Table.TableDropCriterion() {
-                    @Override
-                    protected Set<Object> getAllowedItemIds(DragAndDropEvent dragAndDropEvent, Table table, Collection<Object> collection) {
-                        HashSet<Object> allowed = new HashSet<Object>();
-                        allowed.add(rootId);
-                        allowed.add(4);
-                        allowed.add(6);
-                        return allowed;
-                    }
-                };
-                return criterion;
-                //return criterion;
-
-            }
-
+            @Override
             public void drop(DragAndDropEvent event) {
                 DataBoundTransferable t = (DataBoundTransferable)
                         event.getTransferable();
@@ -119,22 +109,35 @@ public class MyUI extends UI {
 
 
                 if (ttable.hasChildren(sourceItemId) && (!sourceItemId.toString().equals(rootId))) {
-                    if (location == VerticalDropLocation.BOTTOM) {
+                    // container.setParent(sourceItemId, rootId);
+                    //targetItemId = container.getParent(targetItemId);
 
-                        container.setParent(sourceItemId, rootId);
-
-                        if (!container.hasChildren(targetItemId)) {
-                            targetItemId = container.getParent(targetItemId);
-                            container.moveAfterSibling(sourceItemId, targetItemId);
-                        } else {
-                            Object anOtherSibling = 1;
-                            if (sourceItemId.toString().equals("1")) {
-                                anOtherSibling = 2;
-                            }
-                            container.moveAfterSibling(anOtherSibling, sourceItemId);
+                    // find the direction of movement
+                    int sourceIndex = -1;
+                    int targetIndex = -1;
+                    int count = 0;
+                    for (Object id : ttable.getItemIds()) {
+                        if (id.equals(sourceItemId)) {
+                            sourceIndex = count;
                         }
+
+                        if (id.equals(targetItemId)) {
+                            targetIndex = count;
+                        }
+                        count++;
+                    }
+
+                    if (sourceIndex < targetIndex) {
+                        container.moveAfterSibling(sourceItemId, targetItemId);
+                    } else {
+                        container.moveAfterSibling(targetItemId, sourceItemId);
                     }
                 }
+            }
+
+            @Override
+            public AcceptCriterion getAcceptCriterion() {
+                return criterion;
             }
         });
         return ttable;
